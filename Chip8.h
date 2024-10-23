@@ -16,6 +16,8 @@ public:
     void printByte(uint16_t address);
     void setKeystates(std::array<bool, 16> new_keystates);
     void fetchDecodeExecute();
+    void decreaseTimers();
+    bool displayChanged;
     std::array<bool, 64*32> getDisplay();
 
 private:
@@ -28,6 +30,8 @@ private:
     std::array<bool, 16> keystates; // true for pressed
 
     // todo: add timers
+    uint8_t delayTimer;
+    uint8_t soundTimer;
 };
 
 #endif // CHIP8_H

@@ -11,9 +11,12 @@ Chip8::Chip8()
     registers.fill(0);
     PC = 0x200;
     I = 0x0;
+    delayTimer = 0x0;
+    soundTimer = 0x0;
 
     display.fill(false);
     keystates.fill(false);
+    displayChanged = false;
 }
 
 Chip8::~Chip8()
@@ -57,6 +60,13 @@ std::array<bool, 64*32> Chip8::getDisplay()
     return display;
 }
 
+void Chip8::decreaseTimers()
+{
+    delayTimer--;
+    soundTimer--;
+    return;
+}
+
 void Chip8::fetchDecodeExecute()
 {
     // fetch
@@ -86,11 +96,51 @@ void Chip8::fetchDecodeExecute()
             display.fill(false);
             return;
         }
+        if (x == 0x0 && y == 0xe && n == 0xe)
+        {
+            PC = stack.top();
+            stack.pop();
+            return;
+        }
     }
 
     if (type == 0x1)
     {
         PC = nnn;
+        return;
+    }
+
+    if (type == 0x2)
+    {
+        stack.push(PC);
+        PC = nnn;
+        return;
+    }
+
+    if (type == 0x3)
+    {
+        if (registers[x] == nn)
+        {
+            PC += 2;
+        }
+        return;
+    }
+
+    if (type == 0x4)
+    {
+        if (registers[x] != nn)
+        {
+            PC += 2;
+        }
+        return;
+    }
+
+    if (type == 0x5)
+    {
+        if (registers[x] == registers[y])
+        {
+            PC += 2;
+        }
         return;
     }
 
@@ -106,14 +156,121 @@ void Chip8::fetchDecodeExecute()
         return;
     }
 
+    if (type == 0x8)
+    {
+        if (n == 0x0)
+        {
+            registers[x] = registers[y];
+            return;
+        }
+        
+        if (n == 0x1)
+        {
+            registers[x] = registers[x] | registers[y];
+            return;
+        }
+
+        if (n == 0x2)
+        {
+            registers[x] = registers[x] & registers[y];
+            return;
+        }
+
+        if (n == 0x3)
+        {
+            registers[x] = registers[x] ^ registers[y];
+            return;
+        }
+
+        if (n == 0x4)
+        {
+            registers[15] = 0;
+            int sum = registers[x] + registers[y];
+            if (sum > 255)
+            {
+                sum = sum % 256;
+                registers[15] = 1;
+            }
+            registers[x] = sum;
+            return;
+        }
+
+        if (n == 0x5)
+        {
+            if (registers[x] > registers[y])
+            {
+                registers[15] = 1;
+            }
+            else
+            {
+                registers[15] = 0;
+            }
+            registers[x] = registers[x] - registers[y];
+            return;
+        }
+
+        if (n == 0x6)
+        {
+            //registers[x] = registers[x] + registers[y];
+            registers[15] = registers[x] & 0b00000001;
+            registers[x] = registers[x] >> 1;
+            return;
+        }
+
+        if (n == 0x7)
+        {
+            if (registers[y] > registers[x])
+            {
+                registers[15] = 1;
+            }
+            else
+            {
+                registers[15] = 0;
+            }
+            registers[x] = registers[y] - registers[x];
+            return;
+        }
+
+        if (n == 0xe)
+        {
+            //registers[x] = registers[x] + registers[y];
+            registers[15] = registers[x] & 0b10000000;
+            registers[x] = registers[x] << 1;
+            return;
+        }
+    }
+
+    if (type == 0x9)
+    {
+        if (registers[x] != registers[y])
+        {
+            PC += 2;
+        }
+        return;
+    }
+
     if (type == 0xa)
     {
         I = nnn;
         return;
     }
 
+    if (type == 0xb)
+    {
+        PC = nnn + registers[0];
+        return;
+    }
+
+    if (type == 0xc)
+    {
+        registers[x] = (rand() % 256) & nn;
+        return;
+    }   
+
     if (type == 0xd)
     {
+        displayChanged = true;
+
         int x_coord = registers[x] % 64;
         int y_coord = registers[y] % 32;
         registers[15] = 0;
@@ -139,6 +296,75 @@ void Chip8::fetchDecodeExecute()
         return;
     }
 
+    if (type == 0xe)
+    {
+        if (nn == 0x9e)
+        {
+            if (keystates[registers[x]])
+            {
+                PC += 2;
+            }
+            return;
+        }
+        
+        if (nn == 0xa1)
+        {
+            if (!keystates[registers[x]])
+            {
+                PC += 2;
+            }
+            return;
+        }
+    }
+
+    if (type == 0xf)
+    {
+        if (nn == 0x07)
+        {
+            registers[x] = delayTimer;
+            return;
+        }
+
+        if (nn == 0x15)
+        {
+            delayTimer = registers[x];
+            return;
+        }
+
+        if (nn == 0x18)
+        {
+            soundTimer = registers[x];
+            return;
+        }
+
+        if (nn == 0x1e)
+        {
+            I += registers[x];
+            if (I > 0x1000)
+            {
+                registers[15] = 1;
+            }
+            return;
+        }
+
+        if (nn == 0x55)
+        {
+            for (int i = 0; i <= x; i++)
+            {
+                memory[I+i] = registers[i];
+            }
+            return;
+        }
+
+        if (nn == 0x65)
+        {
+            for (int i = 0; i <= x; i++)
+            {
+                registers[i] = memory[I+i];
+            }
+            return;
+        }
+    }
 
 
     std::cout << "unknown instruction: " << std::hex << std::uppercase << instruction << std::endl;
