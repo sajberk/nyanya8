@@ -17,6 +17,28 @@ Chip8::Chip8()
     display.fill(false);
     keystates.fill(false);
     displayChanged = false;
+
+    font = {0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+            0x20, 0x60, 0x20, 0x20, 0x70, // 1
+            0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+            0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+            0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+            0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+            0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+            0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+            0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+            0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+            0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+            0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+            0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+            0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+            0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+            0xF0, 0x80, 0xF0, 0x80, 0x80};// F
+
+    for (int i = 0; i < font.size(); i++)
+    {
+        memory[0x050 + i] = font[i];
+    }
 }
 
 Chip8::~Chip8()
@@ -344,6 +366,36 @@ void Chip8::fetchDecodeExecute()
             {
                 registers[15] = 1;
             }
+            return;
+        }
+
+        if (nn == 0x0a)
+        {
+            for (int i = 0; i < keystates.size(); i++)
+            {
+                if (keystates[i] == true)
+                {
+                    registers[x] = i;
+                    return;
+                }
+            }
+            PC -= 2;
+            return;
+        }
+
+        if (nn == 0x29)
+        {
+            I = 0x050 + (0b00001111 & registers[x])*5;
+            return;
+        }
+
+        if (nn == 0x33)
+        {
+            int i = registers[x];
+            memory[I] = i/100;
+            memory[I+1] = (i/10) % 10;
+            memory[I+2] = (i % 100) % 10;
+
             return;
         }
 

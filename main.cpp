@@ -13,7 +13,7 @@ int main() {
 
     Chip8 chip8;
 
-    std::string romFilename = "roms/Space Invaders [David Winter].ch8";
+    std::string romFilename = "roms/test_opcode.ch8";
     chip8.loadRom(romFilename);
 
     while(!sdlHandler.shouldQuit) 

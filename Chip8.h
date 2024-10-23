@@ -28,6 +28,7 @@ private:
     std::stack<uint16_t> stack;
     std::array<bool, 64*32> display;
     std::array<bool, 16> keystates; // true for pressed
+    std::array<uint8_t, 80> font;
 
     // todo: add timers
     uint8_t delayTimer;
