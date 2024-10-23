@@ -49,26 +49,22 @@ Chip8::~Chip8()
 bool Chip8::loadRom(std::string filename)
 {
     std::ifstream romFile (filename, std::ifstream::binary);
-
-    char byte;
-    while (romFile.read(&byte, sizeof(byte)))
+    if (!romFile)
     {
-        memory[PC] = byte;
-        PC += 1;
+        std::cout << "Failed to open ROM file" << std::endl;
+        return false;
     }
 
     PC = 0x200;
+    char byte;
+    int i = 0;
+    while (romFile.read(&byte, sizeof(byte)))
+    {
+        memory[PC + i] = byte;
+        i++; // todo: check for out of bounds
+    }
 
     return true;
-}
-
-void Chip8::printByte(uint16_t address)
-{
-    std::cout << std::hex << std::setfill('0') 
-              << std::setw(2) << std::uppercase 
-              << (static_cast<unsigned int>(memory[address]) & 0xFF) << " ";
-
-    return;
 }
 
 void Chip8::setKeystates(std::array<bool, 16> new_keystates)
@@ -77,15 +73,23 @@ void Chip8::setKeystates(std::array<bool, 16> new_keystates)
     return;
 }
 
-std::array<bool, 64*32> Chip8::getDisplay()
+const std::array<bool, 64*32> &Chip8::getDisplay() const
 {
     return display;
 }
 
 void Chip8::decreaseTimers()
 {
-    delayTimer--;
-    soundTimer--;
+    if (delayTimer > 0) 
+    {
+        delayTimer--;
+    }
+
+    if (soundTimer > 0) 
+    {
+        soundTimer--;
+    }
+
     return;
 }
 
@@ -256,7 +260,7 @@ void Chip8::fetchDecodeExecute()
         if (n == 0xe)
         {
             //registers[x] = registers[x] + registers[y];
-            registers[15] = registers[x] & 0b10000000;
+            registers[15] = (registers[x] & 0b10000000) >> 7;
             registers[x] = registers[x] << 1;
             return;
         }

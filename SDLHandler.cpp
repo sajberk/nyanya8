@@ -9,6 +9,8 @@ SDLHandler::SDLHandler() : window(nullptr), screenSurface(nullptr), display(null
 SDLHandler::~SDLHandler() 
 {
     SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyTexture(display);
     SDL_Quit();
 }
 
@@ -103,7 +105,7 @@ std::array<bool, 16> SDLHandler::processInput()
     return keystates; 
 }
 
-void SDLHandler::update(std::array<bool, 64*32> displayPixelValues)
+void SDLHandler::update(const std::array<bool, 64*32> &displayPixelValues)
 {
     uint8_t *pixels;
     int pitch = 64 * 32 * 4;
@@ -123,9 +125,6 @@ void SDLHandler::update(std::array<bool, 64*32> displayPixelValues)
     }
 
     SDL_UnlockTexture(display);
-
-
-    
     
     return;
 }

@@ -13,12 +13,11 @@ public:
     ~Chip8();
 
     bool loadRom(std::string filename);
-    void printByte(uint16_t address);
     void setKeystates(std::array<bool, 16> new_keystates);
     void fetchDecodeExecute();
     void decreaseTimers();
     bool displayChanged;
-    std::array<bool, 64*32> getDisplay();
+    const std::array<bool, 64*32> &getDisplay() const;
 
 private:
     std::array<uint8_t, 4096> memory;

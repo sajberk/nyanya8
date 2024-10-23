@@ -12,7 +12,7 @@ public:
 
     bool init();
     std::array<bool, 16> processInput();
-    void update(std::array<bool, 64*32> displayPixelValues);
+    void update(const std::array<bool, 64*32> &displayPixelValues);
     void render();
 
     bool shouldQuit;

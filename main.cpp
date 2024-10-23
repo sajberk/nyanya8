@@ -13,7 +13,10 @@ int main() {
 
     Chip8 chip8;
 
-    std::string romFilename = "roms/test_opcode.ch8";
+    // config
+    int cyclesPerFrame = 10;
+
+    std::string romFilename = "roms/Pong.ch8";
     chip8.loadRom(romFilename);
 
     while(!sdlHandler.shouldQuit) 
@@ -21,7 +24,7 @@ int main() {
         Uint64 frameStart = SDL_GetTicks64();
 
         chip8.setKeystates(sdlHandler.processInput()); 
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < cyclesPerFrame; i++)
         {
             chip8.fetchDecodeExecute();
         }
@@ -32,10 +35,12 @@ int main() {
             sdlHandler.render();   
             chip8.displayChanged = false;
         }
-         
 
         Uint64 frameTime = SDL_GetTicks64() - frameStart;
-        SDL_Delay(16.67 - frameTime);
+        if (frameTime < 16.67)
+        {
+            SDL_Delay(16.67 - frameTime);
+        }
     }
     return 0;
 }
